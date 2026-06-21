@@ -17,6 +17,13 @@ ES_URL="${ES_URL:-http://localhost:9200}"
 SHARDS=1
 
 # ---------------------------------------------------------------------------
+# Start trial license (enables synthetic _source in logsdb)
+# ---------------------------------------------------------------------------
+echo "=== Starting trial license ==="
+curl -sf -X POST "$ES_URL/_license/start_trial?acknowledge=true" | python3 -m json.tool --no-indent || true
+echo ""
+
+# ---------------------------------------------------------------------------
 # Create one index
 # ---------------------------------------------------------------------------
 create_index() {
