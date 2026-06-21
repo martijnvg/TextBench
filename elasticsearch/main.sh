@@ -1,33 +1,21 @@
 #!/bin/bash
 set -e
 
-# Full benchmark orchestration for Elasticsearch.
+# Full benchmark orchestration for Elasticsearch (1b scale, ES|QL).
 #
-# Usage: ./main.sh [scale] [output_prefix]
-#   scale:         1b | 10b | 50b | all  (default: asks interactively)
+# Usage: ./main.sh [output_prefix]
 #   output_prefix: prefix for result files (default: _m6i.8xlarge)
 #
-# For each scale the script:
+# The script:
 #   1. Starts Elasticsearch
-#   2. Creates otel_logs (standard) + otel_logs_ngram (trigram) indexes
-#   3. Ingests data into both indexes
+#   2. Creates otel_logs (logsdb, 1 shard) index
+#   3. Ingests 1b rows
 #   4. Restarts ES (cold-start simulation)
-#   5. Runs benchmark queries (3 runs each)
+#   5. Runs ES|QL benchmark queries (3 runs each)
 #   6. Records index sizes
 #   7. Drops indexes
 
-DEFAULT_CHOICE=ask
-CHOICE="${1:-$DEFAULT_CHOICE}"
-OUTPUT_PREFIX="${2:-_m6i.8xlarge}"
-
-if [ "$CHOICE" = "ask" ]; then
-    echo "Select the dataset size to benchmark:"
-    echo "1) 1b  — 1 Parquet file  (~1B rows)"
-    echo "2) 10b — 10 Parquet files (~10B rows)"
-    echo "3) 50b — all 50 files     (~50B rows)"
-    echo "4) all — run 1b → 10b → 50b"
-    read -rp "Enter choice [1-4]: " CHOICE
-fi
+OUTPUT_PREFIX="${1:-_m6i.8xlarge}"
 
 ./install.sh
 
@@ -46,9 +34,6 @@ benchmark() {
     # Ingest standard index
     ./load_data.sh "$scale" "otel_logs"
 
-    # Ingest ngram index (same data, different analyzer — separate ingest pass)
-    ./load_data.sh "$scale" "otel_logs_ngram"
-
     # Record index sizes (after force merge, before restart)
     ./total_size.sh | tee "${OUTPUT_PREFIX}_es_${scale}.index_size"
 
@@ -59,21 +44,10 @@ benchmark() {
     sleep 10
     ./start.sh   # wait until healthy
 
-    # Run benchmark
-    ./benchmark.sh "" "${OUTPUT_PREFIX}_es_${scale}.results_runtime"
+    # Run ES|QL benchmark
+    ./benchmark_esql.sh "$scale" "" "${OUTPUT_PREFIX}_es_${scale}.results_runtime"
 
     ./drop_indexes.sh
 }
 
-case $CHOICE in
-    2) benchmark 10b ;;
-    3) benchmark 50b ;;
-    4)
-        benchmark 1b
-        benchmark 10b
-        benchmark 50b
-        ;;
-    *)
-        benchmark 1b
-        ;;
-esac
+benchmark 1b

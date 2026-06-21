@@ -8,14 +8,13 @@ set -e
 #   start_file  first file number to create (default: 0)
 #   end_file    last file number to create inclusive (default: 49)
 #
-# Each index gets 5 primary shards, no replicas, best_compression,
-# sorted by (ServiceName, Timestamp) to match the ClickHouse primary key.
+# Each index uses logsdb mode, 1 primary shard, no replicas, sorted by
+# (ServiceName, Body.template_id, @timestamp) to match the ClickHouse primary key.
 
 START="${1:-0}"
 END="${2:-49}"
 ES_URL="${ES_URL:-http://localhost:9200}"
-CODEC="${CODEC:-best_compression}"
-SHARDS=5
+SHARDS=1
 
 # ---------------------------------------------------------------------------
 # Create one index
@@ -32,32 +31,31 @@ create_index() {
         -d "$(cat <<EOF
 {
   "settings": {
-    "number_of_shards":   $SHARDS,
-    "number_of_replicas": 0,
-    "refresh_interval":   "30s",
-    "codec":              "$CODEC",
-    "sort": {
-      "field": ["ServiceName", "Timestamp"],
-      "order": ["asc", "asc"]
+    "index": {
+      "mode":               "logsdb",
+      "number_of_shards":   $SHARDS,
+      "number_of_replicas": 0,
+      "sort.field": ["ServiceName", "Body.template_id", "@timestamp"],
+      "sort.order": ["asc", "asc", "desc"]
     }
   },
   "mappings": {
     "properties": {
-      "Timestamp":          { "type": "date_nanos" },
-      "TraceId":            { "type": "keyword" },
-      "SpanId":             { "type": "keyword" },
-      "TraceFlags":         { "type": "byte" },
-      "SeverityText":       { "type": "keyword" },
-      "SeverityNumber":     { "type": "byte" },
-      "ServiceName":        { "type": "keyword" },
-      "Body":               { "type": "text" },
-      "ResourceSchemaUrl":  { "type": "keyword" },
-      "ResourceAttributes": { "type": "flattened" },
-      "ScopeSchemaUrl":     { "type": "keyword" },
-      "ScopeName":          { "type": "keyword" },
-      "ScopeVersion":       { "type": "keyword" },
-      "ScopeAttributes":    { "type": "flattened" },
-      "LogAttributes":      { "type": "flattened" }
+      "@timestamp":         { "type": "date_nanos", "index": false },
+      "TraceId":            { "type": "keyword",    "index": false },
+      "SpanId":             { "type": "keyword",    "index": false },
+      "TraceFlags":         { "type": "byte",       "index": false },
+      "SeverityText":       { "type": "keyword",    "index": false },
+      "SeverityNumber":     { "type": "byte",       "index": false },
+      "ServiceName":        { "type": "keyword",    "index": false },
+      "Body":               { "type": "pattern_text" },
+      "ResourceSchemaUrl":  { "type": "keyword",    "index": false },
+      "ResourceAttributes": { "type": "flattened",  "index": false },
+      "ScopeSchemaUrl":     { "type": "keyword",    "index": false },
+      "ScopeName":          { "type": "keyword",    "index": false },
+      "ScopeVersion":       { "type": "keyword",    "index": false },
+      "ScopeAttributes":    { "type": "flattened",  "index": false },
+      "LogAttributes":      { "type": "flattened",  "index": false }
     }
   }
 }

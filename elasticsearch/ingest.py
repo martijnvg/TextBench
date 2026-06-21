@@ -71,6 +71,10 @@ def batch_to_ndjson(batch: pa.RecordBatch) -> bytes:
         else:
             cols[col_name] = col.to_pylist()
 
+    # Rename Timestamp → @timestamp to match the index mapping and sort field.
+    if "Timestamp" in cols:
+        cols["@timestamp"] = cols.pop("Timestamp")
+
     names = list(cols.keys())
     values = list(cols.values())
     action = b'{"index":{}}\n'

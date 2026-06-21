@@ -19,7 +19,7 @@ INDEX="${1:?Usage: $0 <index> [log_file] [query_file]}"
 LOG_FILE="${2:-/dev/null}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-QUERY_FILE="${3:-$SCRIPT_DIR/queries_10_esql.json}"
+QUERY_FILE="${3:-$SCRIPT_DIR/queries_esql.json}"
 
 if [[ ! -f "$QUERY_FILE" ]]; then
     echo "Error: query file '$QUERY_FILE' not found." >&2
