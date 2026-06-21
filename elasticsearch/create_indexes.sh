@@ -41,7 +41,7 @@ create_index() {
   },
   "mappings": {
     "properties": {
-      "@timestamp":         { "type": "date_nanos", "index": false },
+      "@timestamp":         { "type": "date_nanos" },
       "TraceId":            { "type": "keyword",    "index": false },
       "SpanId":             { "type": "keyword",    "index": false },
       "TraceFlags":         { "type": "byte",       "index": false },
