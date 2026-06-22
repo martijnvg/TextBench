@@ -128,6 +128,20 @@ for i in $(seq "$FILE_FIRST" "$FILE_LAST"); do
           "index.blocks.write":           true
         }' > /dev/null
 
+    # Wait for background merges to finish before returning so callers
+    # (total_size.sh, benchmark scripts) see stable on-disk sizes.
+    echo "--- Waiting for merges to complete on $INDEX ---"
+    while true; do
+        MERGES=$(curl -sf "$ES_URL/$INDEX/_stats/merge" | \
+            python3 -c "import sys,json; print(json.load(sys.stdin)['_all']['total']['merges']['current'])")
+        if [[ "$MERGES" == "0" ]]; then
+            echo "Merges complete."
+            break
+        fi
+        echo "  Active merges: $MERGES — waiting 10s..."
+        sleep 10
+    done
+
     rm -f "$TMP_FILE"
     echo ""
 done

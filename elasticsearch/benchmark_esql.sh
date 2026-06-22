@@ -37,6 +37,17 @@ OS_INFO=$(lsb_release -ds 2>/dev/null || uname -sr)
 TODAY=$(date +%Y-%m-%d)
 
 NUM_DOCS=$(curl -sf "$ES_URL/$INDEX/_count" | python3 -c "import sys,json; print(json.load(sys.stdin)['count'])")
+
+# Wait for any background merges to finish so INDEX_SIZE reflects stable on-disk size.
+echo "Waiting for merges to complete..."
+while true; do
+    MERGES=$(curl -sf "$ES_URL/$INDEX/_stats/merge" | \
+        python3 -c "import sys,json; print(json.load(sys.stdin)['_all']['total']['merges']['current'])")
+    if [[ "$MERGES" == "0" ]]; then break; fi
+    echo "  Active merges: $MERGES — waiting 10s..."
+    sleep 10
+done
+
 INDEX_SIZE=$(curl -sf "$ES_URL/_cat/indices/$INDEX?h=pri.store.size&bytes=b" | awk '{s+=$1} END {print s}')
 
 echo "  ES version:   $ES_VERSION"
