@@ -39,9 +39,11 @@ create_index() {
 {
   "settings": {
     "index": {
-      "mode":               "logsdb",
-      "number_of_shards":   $SHARDS,
-      "number_of_replicas": 0,
+      "mode":                       "logsdb",
+      "number_of_shards":           $SHARDS,
+      "number_of_replicas":         0,
+      "codec":                      "best_compression",
+      "disable_sequence_numbers":   true,
       "sort.field": ["ServiceName", "Body.template_id", "@timestamp"],
       "sort.order": ["asc", "asc", "desc"]
     }
