@@ -15,7 +15,18 @@ set -e
 #   6. Records index sizes
 #   7. Drops indexes
 
-OUTPUT_PREFIX="${1:-_m6i.8xlarge}"
+DEFAULT_CHOICE=ask
+CHOICE="${1:-$DEFAULT_CHOICE}"
+OUTPUT_PREFIX="${2:-_m6i.8xlarge}"
+
+if [ "$CHOICE" = "ask" ]; then
+    echo "Select the dataset size to benchmark:"
+    echo "1) 1b  — 1 Parquet file  (~1B rows)"
+    echo "2) 10b — 10 Parquet files (~10B rows)"
+    echo "3) 50b — all 50 files     (~50B rows)"
+    echo "4) all — run 1b → 10b → 50b"
+    read -rp "Enter choice [1-4]: " CHOICE
+fi
 
 ./install.sh
 
@@ -34,7 +45,7 @@ benchmark() {
     # Ingest standard index
     ./load_data.sh "$scale" "otel_logs"
 
-    # Record index sizes (after force merge, before restart)
+    # Record index sizes (after waiting for background merges to complete, before restart)
     ./total_size.sh | tee "${OUTPUT_PREFIX}_es_${scale}.index_size"
 
     # Restart to simulate cold start / clear in-memory state
@@ -44,10 +55,21 @@ benchmark() {
     sleep 10
     ./start.sh   # wait until healthy
 
-    # Run ES|QL benchmark
+    # Run ES|QL queries:
     ./benchmark_esql.sh "$scale" "" "${OUTPUT_PREFIX}_es_${scale}.results_runtime"
 
     ./drop_indexes.sh
 }
 
-benchmark 1b
+case $CHOICE in
+    2) benchmark 10b ;;
+    3) benchmark 50b ;;
+    4)
+        benchmark 1b
+        benchmark 10b
+        benchmark 50b
+        ;;
+    *)
+        benchmark 1b
+        ;;
+esac

@@ -6,7 +6,7 @@
 #   query_file: path to ES|QL query JSON file (default: queries_esql.json)
 #
 # Local variant of run_queries_esql.sh — skips the systemctl stop/start and
-# OS page-cache drop, so it runs on macOS or any non-systemd host.
+# OS page-cache drop, so it runs on any non-systemd host. Allows for easy testing locally.
 # All 3 runs per query are warm; there is no cold-cache measurement.
 
 ES_URL="${ES_URL:-http://localhost:9200}"
