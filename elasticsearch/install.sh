@@ -7,7 +7,7 @@ wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch \
 sudo apt-get install -y apt-transport-https
 echo "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/9.x/apt stable main" \
     | sudo tee /etc/apt/sources.list.d/elastic-9.x.list
-sudo apt-get update && sudo apt-get install -y elasticsearch=9.3.2
+sudo apt-get update && sudo apt-get install -y elasticsearch=9.4.2
 
 # Create data and log directories with correct ownership
 sudo mkdir -p /data/elasticsearch /data/elasticsearch-logs
