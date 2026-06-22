@@ -49,6 +49,7 @@ create_index() {
     "sort.order": ["asc", "asc", "desc"]
   },
   "mappings": {
+    "dynamic": "strict",
     "properties": {
       "@timestamp":         { "type": "date_nanos" },
       "TraceId":            { "type": "keyword",    "index": false },

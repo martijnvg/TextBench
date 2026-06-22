@@ -75,6 +75,10 @@ def batch_to_ndjson(batch: pa.RecordBatch) -> bytes:
     if "Timestamp" in cols:
         cols["@timestamp"] = cols.pop("Timestamp")
 
+    # Drop TimestampTime: it is not in the mapping (and not present in ClickHouse),
+    # so with dynamic:strict it would otherwise be rejected.
+    cols.pop("TimestampTime", None)
+
     names = list(cols.keys())
     values = list(cols.values())
     action = b'{"index":{}}\n'
