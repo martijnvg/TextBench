@@ -15,6 +15,7 @@ START="${1:-0}"
 END="${2:-49}"
 ES_URL="${ES_URL:-http://localhost:9200}"
 SHARDS=1
+CODEC="${CODEC:-best_compression}"
 
 # ---------------------------------------------------------------------------
 # Start trial license (enables synthetic _source in logsdb)
@@ -38,15 +39,13 @@ create_index() {
         -d "$(cat <<EOF
 {
   "settings": {
-    "index": {
-      "mode":                       "logsdb",
-      "number_of_shards":           $SHARDS,
-      "number_of_replicas":         0,
-      "codec":                      "best_compression",
-      "disable_sequence_numbers":   true,
-      "sort.field": ["ServiceName", "Body.template_id", "@timestamp"],
-      "sort.order": ["asc", "asc", "desc"]
-    }
+    "mode":                     "logsdb",
+    "number_of_shards":         $SHARDS,
+    "number_of_replicas":       0,
+    "codec":                    "$CODEC",
+    "disable_sequence_numbers": true,
+    "sort.field": ["ServiceName", "Body.template_id", "@timestamp"],
+    "sort.order": ["asc", "asc", "desc"]
   },
   "mappings": {
     "properties": {
