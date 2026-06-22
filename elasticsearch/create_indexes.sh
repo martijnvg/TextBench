@@ -44,6 +44,7 @@ create_index() {
     "number_of_replicas":       0,
     "codec":                    "$CODEC",
     "disable_sequence_numbers": true,
+    "merge.scheduler.auto_throttle": false, # No concurrent index and searches, so no need to auto-throttle.
     "sort.field": ["ServiceName", "Body.template_id", "@timestamp"],
     "sort.order": ["asc", "asc", "desc"]
   },
