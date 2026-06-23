@@ -7,7 +7,7 @@ sudo systemctl start elasticsearch
 
 echo "Waiting for Elasticsearch to start..."
 for i in $(seq 1 60); do
-    if curl -sf "http://localhost:9200/_cluster/health" > /dev/null 2>&1; then
+    if curl -sf "http://localhost:9200/_cluster/health?wait_for_status=green" > /dev/null 2>&1; then
         echo "Elasticsearch is up."
         exit 0
     fi
