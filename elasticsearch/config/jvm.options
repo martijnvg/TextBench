@@ -1,5 +1,5 @@
 # m6i.8xlarge has 128 GB RAM.
 # The indexing and searching work loads don't a large jvm heap space.
-# Reserve us much of the available RAM to the OS page cache.
+# Reserve as much of the available RAM to the OS page cache.
 -Xms8g
 -Xmx8g
