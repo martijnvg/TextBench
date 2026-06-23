@@ -96,14 +96,6 @@ for i in $(seq "$FILE_FIRST" "$FILE_LAST"); do
         NEXT_DL_PID=""
     fi
 
-    # Pre-ingest settings
-    curl -s -X PUT "$ES_URL/$INDEX/_settings" \
-        -H 'Content-Type: application/json' \
-        -d '{
-          "index.translog.durability":    "async",
-          "index.translog.sync_interval": "120s"
-        }' > /dev/null
-
     # Ingest
     echo "--- File $((i - FILE_FIRST + 1))/$((FILE_LAST - FILE_FIRST + 1)): ingesting part_${FILE_NUM}.parquet into $INDEX ---"
     INGEST_START=$(date +%s)
@@ -116,15 +108,6 @@ for i in $(seq "$FILE_FIRST" "$FILE_LAST"); do
         --local-dir    /tmp
     INGEST_END=$(date +%s)
     echo "Ingest: $((INGEST_END - INGEST_START))s"
-
-    # Post-ingest settings
-    curl -s -X PUT "$ES_URL/$INDEX/_settings" \
-        -H 'Content-Type: application/json' \
-        -d '{
-          "index.translog.durability":    "request",
-          "index.translog.sync_interval": "5s",
-          "index.blocks.write":           true
-        }' > /dev/null
 
     # Wait for background merges to finish before returning so callers
     # (total_size.sh, benchmark scripts) see stable on-disk sizes.
