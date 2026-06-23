@@ -100,7 +100,6 @@ for i in $(seq "$FILE_FIRST" "$FILE_LAST"); do
     curl -s -X PUT "$ES_URL/$INDEX/_settings" \
         -H 'Content-Type: application/json' \
         -d '{
-          "index.refresh_interval":       "-1",
           "index.translog.durability":    "async",
           "index.translog.sync_interval": "120s"
         }' > /dev/null
@@ -122,7 +121,6 @@ for i in $(seq "$FILE_FIRST" "$FILE_LAST"); do
     curl -s -X PUT "$ES_URL/$INDEX/_settings" \
         -H 'Content-Type: application/json' \
         -d '{
-          "index.refresh_interval":       "30s",
           "index.translog.durability":    "request",
           "index.translog.sync_interval": "5s",
           "index.blocks.write":           true
