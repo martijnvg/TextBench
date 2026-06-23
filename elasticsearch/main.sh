@@ -34,16 +34,25 @@ benchmark() {
     local scale=$1   # 1b | 10b | 50b
     local suffix="_${scale}"
 
+    # Map scale -> parquet file range (parts are 000..049)
+    local file_first=0 file_last
+    case "$scale" in
+        1b)  file_last=0  ;;
+        10b) file_last=9  ;;
+        50b) file_last=49 ;;
+        *) echo "Unknown scale '$scale'. Use: 1b | 10b | 50b" >&2; return 1 ;;
+    esac
+
     echo ""
     echo "========================================"
     echo "  SCALE: $scale"
     echo "========================================"
 
     ./start.sh
-    ./create_indexes.sh "$scale"
+    ./create_indexes.sh "$file_first" "$file_last"
 
     # Ingest standard index
-    ./load_data.sh "$scale" "otel_logs"
+    ./load_data.sh "$file_first" "$file_last"
 
     # Record index sizes (after waiting for background merges to complete, before restart)
     ./total_size.sh | tee "${OUTPUT_PREFIX}_es_${scale}.index_size"
@@ -58,7 +67,7 @@ benchmark() {
     # Run ES|QL queries:
     ./benchmark_esql.sh "$scale" "" "${OUTPUT_PREFIX}_es_${scale}.results_runtime"
 
-    ./drop_indexes.sh
+    ./drop_indexes.sh "$scale"
 }
 
 case $CHOICE in
